@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CampusVoice – Complaint Management</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0f1020;--card:rgba(255,255,255,.06);--line:rgba(255,255,255,.1);--tx:#eef0ff;--mu:#9a9fc4;--a:#7c5cff;--b:#22d3ee;--ok:#34d399;--warn:#fbbf24;--bad:#f87171}
+*{box-sizing:border-box;margin:0}body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:radial-gradient(900px 500px at 10% -10%,#3b2a8f55,transparent),radial-gradient(800px 500px at 100% 0,#0e7490449,transparent),var(--bg);color:var(--tx);min-height:100vh}
+.wrap{max-width:1100px;margin:auto;padding:24px 18px 60px}
+.glass{background:var(--card);border:1px solid var(--line);border-radius:18px;backdrop-filter:blur(14px)}
+nav{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;margin-bottom:26px}
+.logo{font-weight:800;font-size:20px;background:linear-gradient(90deg,var(--a),var(--b));-webkit-background-clip:text;color:transparent}
+.who{display:flex;gap:12px;align-items:center;color:var(--mu);font-size:14px}
+button,.btn{font:inherit;cursor:pointer;border:0;border-radius:12px;padding:10px 18px;font-weight:600;color:#fff;background:linear-gradient(135deg,var(--a),#5b8cff);transition:.2s}
+button:hover{transform:translateY(-1px);filter:brightness(1.1)}button.ghost{background:transparent;border:1px solid var(--line);color:var(--tx)}
+input,select,textarea{width:100%;font:inherit;color:var(--tx);background:rgba(0,0,0,.25);border:1px solid var(--line);border-radius:12px;padding:11px 14px;outline:0}
+input:focus,select:focus,textarea:focus{border-color:var(--a);box-shadow:0 0 0 3px #7c5cff33}option{color:#000}
+label{font-size:13px;color:var(--mu);font-weight:600;display:block;margin:12px 0 6px}
+.auth{max-width:420px;margin:7vh auto;padding:32px}.auth h1{font-size:28px;margin-bottom:4px}.auth p{color:var(--mu);margin-bottom:10px}
+.tabs{display:flex;gap:6px;margin:18px 0 4px;background:rgba(0,0,0,.25);padding:5px;border-radius:12px}.tabs button{flex:1;background:none;color:var(--mu)}.tabs button.on{background:var(--a);color:#fff}
+.err{color:var(--bad);font-size:13px;margin-top:10px;min-height:16px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:22px}
+.stat{padding:18px}.stat b{font-size:30px;display:block}.stat span{color:var(--mu);font-size:13px}
+.grid{display:grid;grid-template-columns:340px 1fr;gap:20px;align-items:start}@media(max-width:850px){.grid{grid-template-columns:1fr}}
+.panel{padding:22px}.panel h2{font-size:17px;margin-bottom:6px}
+.bar{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap}.bar select{width:auto}
+.item{padding:18px;margin-bottom:12px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid var(--line)}
+.item h3{font-size:16px}.item p{color:var(--mu);font-size:14px;margin:8px 0}.meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--mu)}
+.pill{padding:3px 11px;border-radius:99px;font-size:12px;font-weight:700}
+.Pending{background:#fbbf2422;color:var(--warn)}.In\ Progress{background:#22d3ee22;color:var(--b)}.Resolved{background:#34d39922;color:var(--ok)}.Rejected{background:#f8717122;color:var(--bad)}
+.High{color:var(--bad)}.Medium{color:var(--warn)}.Low{color:var(--ok)}
+.reply{border-left:3px solid var(--b);padding:8px 12px;margin-top:8px;font-size:14px;background:#22d3ee10;border-radius:0 10px 10px 0}
+.admin{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}.admin input{flex:1;min-width:160px}.admin select{width:auto}
+.empty{text-align:center;color:var(--mu);padding:40px 0}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:12px 22px;border-radius:12px;background:#1d1f3a;border:1px solid var(--line);opacity:0;transition:.3s;pointer-events:none}#toast.show{opacity:1}
+</style></head><body><div class="wrap" id="app"></div><div id="toast"></div>
+<script>
+const $=s=>document.querySelector(s),app=$('#app');
+let S={token:localStorage.t||'',user:JSON.parse(localStorage.u||'null'),list:[],mode:'login',err:'',filter:'All'};
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200)}
+async function api(p,o={}){const r=await fetch('/api'+p,{...o,headers:{'Content-Type':'application/json',Authorization:'Bearer '+S.token},body:o.body&&JSON.stringify(o.body)});
+ const d=await r.json();if(r.status===401&&S.user)logout();if(!r.ok)throw new Error(d.error);return d}
+function logout(){localStorage.clear();S.token='';S.user=null;render()}
+async function authSubmit(e){e.preventDefault();const f=Object.fromEntries(new FormData(e.target));
+ try{const d=await api('/'+S.mode,{method:'POST',body:f});S.token=d.token;S.user=d.user;localStorage.t=d.token;localStorage.u=JSON.stringify(d.user);S.err='';await load()}catch(x){S.err=x.message;render()}}
+async function load(){S.list=await api('/complaints');render()}
+async function submitC(e){e.preventDefault();try{await api('/complaints',{method:'POST',body:Object.fromEntries(new FormData(e.target))});toast('Complaint submitted ✔');load()}catch(x){toast(x.message)}}
+async function upd(id,body){await api('/complaints/'+id,{method:'PATCH',body});toast('Updated');load()}
+async function del(id){if(confirm('Delete this complaint?')){await api('/complaints/'+id,{method:'DELETE'});load()}}
+const count=s=>S.list.filter(c=>c.status===s).length;
+function render(){
+ if(!S.user){const reg=S.mode==='register';app.innerHTML=`<form class="glass auth" onsubmit="authSubmit(event)"><div class="logo" style="font-size:24px">📣 CampusVoice</div>
+ <h1>${reg?'Create account':'Welcome back'}</h1><p>Raise issues. Track progress. Get them resolved.</p>
+ <div class="tabs"><button type="button" class="${reg?'':'on'}" onclick="S.mode='login';S.err='';render()">Login</button><button type="button" class="${reg?'on':''}" onclick="S.mode='register';S.err='';render()">Sign up</button></div>
+ ${reg?'<label>Full name</label><input name="name" required>':''}<label>Email</label><input name="email" type="email" required><label>Password</label><input name="password" type="password" required>
+ <div class="err">${esc(S.err)}</div><button style="width:100%;margin-top:8px">${reg?'Sign up':'Login'}</button><p style="font-size:12px;margin-top:14px">Admin demo: admin@campus.edu / admin123</p></form>`;return}
+ const adm=S.user.role==='admin',shown=S.list.filter(c=>S.filter==='All'||c.status===S.filter);
+ app.innerHTML=`<nav class="glass"><span class="logo">📣 CampusVoice</span><div class="who">${esc(S.user.name)} · ${S.user.role}<button class="ghost" onclick="logout()">Logout</button></div></nav>
+ <div class="stats"><div class="glass stat"><b>${S.list.length}</b><span>Total</span></div><div class="glass stat"><b style="color:var(--warn)">${count('Pending')}</b><span>Pending</span></div>
+ <div class="glass stat"><b style="color:var(--b)">${count('In Progress')}</b><span>In progress</span></div><div class="glass stat"><b style="color:var(--ok)">${count('Resolved')}</b><span>Resolved</span></div></div>
+ <div class="${adm?'':'grid'}">${adm?'':`<form class="glass panel" onsubmit="submitC(event)"><h2>New complaint</h2>
+ <label>Title</label><input name="title" required maxlength="80"><label>Category</label><select name="category"><option>Hostel</option><option>Academics</option><option>Infrastructure</option><option>Canteen</option><option>Transport</option><option>Library</option><option>Other</option></select>
+ <label>Priority</label><select name="priority"><option>Low</option><option selected>Medium</option><option>High</option></select><label>Description</label><textarea name="description" rows="5" required></textarea><button style="width:100%;margin-top:16px">Submit complaint</button></form>`}
+ <div class="glass panel"><div class="bar"><h2 style="flex:1">${adm?'All complaints':'My complaints'}</h2><select onchange="S.filter=this.value;render()">${['All','Pending','In Progress','Resolved','Rejected'].map(x=>`<option ${x===S.filter?'selected':''}>${x}</option>`).join('')}</select></div>
+ ${shown.length?shown.map(c=>`<div class="item"><div style="display:flex;justify-content:space-between;gap:10px"><h3>#${c.id} ${esc(c.title)}</h3><span class="pill ${c.status}">${c.status}</span></div>
+ <p>${esc(c.description)}</p><div class="meta"><span>${esc(c.category)}</span>·<span class="${c.priority}">${c.priority} priority</span>·<span>${new Date(c.createdAt).toLocaleDateString()}</span>${adm?`·<span>by ${esc(c.userName)}</span>`:''}</div>
+ ${c.response?`<div class="reply"><b>Admin response:</b> ${esc(c.response)}</div>`:''}
+ ${adm?`<div class="admin"><select onchange="upd(${c.id},{status:this.value})">${['Pending','In Progress','Resolved','Rejected'].map(x=>`<option ${x===c.status?'selected':''}>${x}</option>`).join('')}</select>
+ <input id="r${c.id}" placeholder="Write a response…" value="${esc(c.response)}"><button onclick="upd(${c.id},{response:$('#r${c.id}').value})">Reply</button><button class="ghost" onclick="del(${c.id})">Delete</button></div>`
+ :c.status==='Pending'?`<div class="admin"><button class="ghost" onclick="del(${c.id})">Withdraw</button></div>`:''}</div>`).join(''):'<div class="empty">No complaints here yet 🎉</div>'}</div></div>`}
+S.user?load().catch(render):render();
+</script></body></html>

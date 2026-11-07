@@ -1,0 +1,47 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "name": "Admin",
+      "email": "admin@campus.edu",
+      "role": "admin",
+      "salt": "bd018949ffe7da81",
+      "pass": "93b8fa0cf147a7787db1b7df1b028766d08158c4c4da810f0f574ddd688ee020"
+    },
+    {
+      "id": 2,
+      "name": "Madhumithaasri P",
+      "email": "pmadhumithaasri@gmail.com",
+      "role": "student",
+      "salt": "88ebe977216c409b",
+      "pass": "f6bd0468f570893171ccd2d04d544614fff2af6f2d81dae4dcd4108f5773d5fb"
+    },
+    {
+      "id": 3,
+      "name": "Madhumithaasri Puhazhenthi",
+      "email": "pmadhumithaasri2006@gmail.com",
+      "role": "student",
+      "salt": "4340889b0365c68b",
+      "pass": "8c1800825b7e96e1baf2bf05fd419e222257ec958347989c4bdb49810e79db25"
+    }
+  ],
+  "complaints": [
+    {
+      "id": 1,
+      "userId": 2,
+      "userName": "Madhumithaasri P",
+      "title": "food",
+      "category": "Hostel",
+      "description": "Food is not good",
+      "priority": "High",
+      "status": "Pending",
+      "response": "",
+      "createdAt": "2026-10-30T13:48:00.829Z",
+      "updatedAt": "2026-10-30T13:48:00.829Z"
+    }
+  ],
+  "seq": {
+    "u": 3,
+    "c": 1
+  }
+}
